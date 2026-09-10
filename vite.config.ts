@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  base: "/Event-Management-Project/",
   plugins: [react()],
   resolve: {
     alias: {
