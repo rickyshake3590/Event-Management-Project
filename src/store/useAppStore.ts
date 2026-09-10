@@ -45,6 +45,7 @@ interface AppState {
   assignCoordinator: (id: string, coordinatorId: string) => void;
   reviewEvent: (id: string, decision: "approve" | "reject" | "clarify", note?: string) => void;
   setEventStatus: (id: string, status: EventStatus) => void;
+  submitClarificationRequest: (eventId: string, message: string) => void;
   requestEventChange: (eventId: string, cr: Omit<ChangeRequest, "id" | "eventId" | "status" | "createdAt">) => void;
   reviewChangeRequest: (eventId: string, crId: string, decision: "approved" | "rejected") => void;
 
@@ -100,6 +101,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       equipmentNeeds: data.equipmentNeeds ?? "",
       registrationEnabled: data.registrationEnabled ?? false,
       changeRequests: [],
+      comments: [],
+      requestingClarification: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -205,6 +208,42 @@ export const useAppStore = create<AppState>((set, get) => ({
         e.id === id ? { ...e, status, updatedAt: new Date().toISOString() } : e
       ),
     }));
+  },
+
+  submitClarificationRequest: (eventId, message) => {
+    const user = get().currentUser;
+    const comment = {
+      id: nextId("c"),
+      authorId: user.id,
+      authorName: user.name,
+      authorRole: user.role,
+      message,
+      timestamp: new Date().toISOString(),
+      type: "clarification" as const,
+    };
+    set((s) => ({
+      events: s.events.map((e) =>
+        e.id === eventId
+          ? {
+              ...e,
+              comments: [comment, ...e.comments],
+              requestingClarification: true,
+              status: "under_review" as EventStatus,
+              updatedAt: new Date().toISOString(),
+            }
+          : e
+      ),
+    }));
+    const event = get().events.find((e) => e.id === eventId);
+    if (event) {
+      get().pushNotification({
+        audienceRole: "organiser",
+        audienceUserId: event.organiserId,
+        type: "clarification",
+        message: `Clarification requested for "${event.name}": ${message}`,
+        relatedEventId: eventId,
+      });
+    }
   },
 
   requestEventChange: (eventId, cr) => {

@@ -41,6 +41,16 @@ export interface ChangeRequest {
   createdAt: string;
 }
 
+export interface Comment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: UserRole;
+  message: string;
+  timestamp: string;
+  type: "clarification" | "reply";
+}
+
 export interface EventRecord {
   id: string;
   name: string;
@@ -62,6 +72,8 @@ export interface EventRecord {
   clarificationNote?: string;
   rejectionReason?: string;
   changeRequests: ChangeRequest[];
+  comments: Comment[];
+  requestingClarification: boolean;
   createdAt: string;
   updatedAt: string;
 }

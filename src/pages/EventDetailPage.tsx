@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { RadioGroup, TextArea } from "@/components/ui/FormControls";
 import { formatDateRange, formatDateTime } from "@/utils/format";
+import { ClarificationRequestForm } from "@/components/ClarificationRequestForm";
+import { ClarificationIndicator } from "@/components/ClarificationIndicator";
+import { CommentHistory } from "@/components/CommentHistory";
 
 const STATUS_FLOW = [
   "draft",
@@ -30,6 +33,7 @@ export function EventDetailPage() {
   const reviewEvent = useAppStore((s) => s.reviewEvent);
   const registerForEvent = useAppStore((s) => s.registerForEvent);
   const withdrawRegistration = useAppStore((s) => s.withdrawRegistration);
+  const submitClarificationRequest = useAppStore((s) => s.submitClarificationRequest);
 
   const [reviewOpen, setReviewOpen] = useState(false);
   const [decision, setDecision] = useState<"approve" | "reject" | "clarify" | "">("");
@@ -137,6 +141,11 @@ export function EventDetailPage() {
       {event.clarificationNote && event.status === "under_review" && (
         <div className="mb-4 rounded-lg border border-warning-300 dark:border-warning-700 bg-warning-50 dark:bg-warning-900/20 px-4 py-3 text-sm text-warning-900 dark:text-warning-300">
           <strong>Clarification requested:</strong> {event.clarificationNote}
+        </div>
+      )}
+      {event.requestingClarification && (
+        <div className="mb-4">
+          <ClarificationIndicator event={event} />
         </div>
       )}
       {event.rejectionReason && event.status === "rejected" && (
@@ -273,6 +282,15 @@ export function EventDetailPage() {
           />
         )}
       </Modal>
+
+      <div className="mt-6 space-y-4">
+        <ClarificationRequestForm
+          event={event}
+          currentUser={currentUser}
+          onSubmit={(message) => submitClarificationRequest(event.id, message)}
+        />
+        {event.comments.length > 0 && <CommentHistory event={event} />}
+      </div>
 
       <div className="mt-4">
         <button onClick={() => navigate(-1)} className="text-sm text-gray-500 dark:text-gray-400 hover:underline">
